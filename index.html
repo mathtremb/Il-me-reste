@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Il me reste</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Il me reste">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF0F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F151B" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column, the remaining amount is the whole page; entry form right under it, history below. */
+:root {
+  --bg: #EDF0F3; --surface: #FFFFFF; --fg: #121C26; --muted: #5D6B78; --line: #D5DCE3;
+  --accent: #2448C9; --accent-fg: #FFFFFF; --ok: #17845A; --warn: #B86A0E; --bad: #C2332B; --track: #DCE2E8;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F151B; --surface: #18212A; --fg: #E8EDF2; --muted: #93A1AE; --line: #2A3540;
+    --accent: #7C97FF; --accent-fg: #0B1020; --ok: #4CC793; --warn: #E8A24A; --bad: #FF7A70; --track: #26313C;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: 16px; line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+[hidden] { display: none !important; }
+.wrap { max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { font-family: var(--display); font-variation-settings: "wdth" 112; font-weight: 800; font-size: 15px; letter-spacing: .02em; text-transform: uppercase; }
+.seg { display: inline-flex; background: var(--track); border-radius: 999px; padding: 3px; }
+.seg button { border: 0; background: transparent; padding: 7px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
+
+.hero { display: flex; flex-direction: column; gap: 10px; }
+.label { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.big {
+  font-family: var(--display); font-variation-settings: "wdth" 118; font-weight: 850;
+  font-size: clamp(56px, 19vw, 92px); line-height: .95; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color .2s;
+}
+.big .cents { font-size: .42em; font-weight: 700; letter-spacing: 0; vertical-align: .95em; margin-left: .06em; }
+.big.ok { color: var(--fg); } .big.warn { color: var(--warn); } .big.bad { color: var(--bad); }
+.bar { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--ok); border-radius: 999px; transition: width .35s ease, background .2s; }
+.bar.warn i { background: var(--warn); } .bar.bad i { background: var(--bad); }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta b { color: var(--fg); font-weight: 600; }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+
+.add { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.amount-row { display: flex; align-items: center; gap: 8px; }
+.amount-row .cur { font-family: var(--display); font-weight: 800; font-size: 28px; color: var(--muted); }
+#amt { flex: 1; min-width: 0; border: 0; background: transparent; font-family: var(--display); font-variation-settings: "wdth" 110; font-weight: 800; font-size: 36px; font-variant-numeric: tabular-nums; padding: 2px 0; }
+#amt::placeholder, #note::placeholder, #budgetIn::placeholder { color: var(--muted); opacity: .55; }
+#amt:focus, #note:focus { outline: none; }
+.note-row { display: flex; gap: 8px; }
+#note { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 11px 12px; font-size: 16px; }
+#note:focus { border-color: var(--accent); }
+.go { border: 0; background: var(--accent); color: var(--accent-fg); font-weight: 700; padding: 0 20px; border-radius: 12px; min-height: 46px; font-size: 16px; }
+.go:disabled { opacity: .4; cursor: default; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 4px 11px; font-size: 13px; color: var(--muted); }
+
+.setup { display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+.setup h2 { margin: 0; font-family: var(--display); font-variation-settings: "wdth" 108; font-weight: 800; font-size: 24px; line-height: 1.15; text-wrap: balance; }
+.setup p { margin: 0; color: var(--muted); font-size: 15px; }
+.setup .row { display: flex; gap: 8px; align-items: center; }
+#budgetIn { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 11px 12px; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#budgetIn:focus { outline: none; border-color: var(--accent); }
+
+.list h3 { margin: 0 0 6px; }
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.rows li:last-child { border-bottom: 0; }
+.rows .what { min-width: 0; }
+.rows .what span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.rows .what small { color: var(--muted); font-size: 13px; }
+.rows .amt { font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.rows .del { border: 0; background: transparent; color: var(--muted); width: 34px; height: 34px; border-radius: 10px; font-size: 18px; line-height: 1; }
+.rows .del.armed { background: var(--bad); color: #fff; font-size: 12px; font-weight: 700; width: auto; padding: 0 9px; }
+.empty { color: var(--muted); font-size: 15px; padding: 8px 0; }
+
+.backup { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+.backup p { margin: 0; font-size: 13px; color: var(--muted); }
+.backup p.late { color: var(--warn); font-weight: 600; }
+.backup .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.ghost { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 14px; font-weight: 600; font-size: 14px; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; max-width: calc(100% - 32px); text-align: center; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Il me reste</div>
+    <div class="seg" role="group" aria-label="Budget">
+      <button id="tabM" aria-pressed="true">Mois</button>
+      <button id="tabY" aria-pressed="false">Année</button>
+    </div>
+  </header>
+
+  <section id="setup" class="setup" hidden>
+    <h2 id="setupTitle">Combien tu te donnes par mois?</h2>
+    <p id="setupHint">Ce montant revient au complet le 1er de chaque mois.</p>
+    <div class="row">
+      <input id="budgetIn" inputmode="decimal" autocomplete="off" placeholder="350">
+      <button id="budgetSave" class="go">OK</button>
+    </div>
+    <button id="budgetCancel" class="linkbtn" hidden>Annuler</button>
+  </section>
+
+  <section id="main" class="hero" aria-live="polite">
+    <div class="label" id="heroLabel">Il te reste ce mois-ci</div>
+    <div class="big ok" id="big">0 $</div>
+    <div class="bar" id="bar"><i></i></div>
+    <div class="meta">
+      <span id="spentLine"></span>
+      <button class="linkbtn" id="editBudget">Changer le budget</button>
+    </div>
+    <div class="meta"><span id="pace"></span></div>
+  </section>
+
+  <form id="add" class="add" autocomplete="off">
+    <div class="amount-row">
+      <span class="cur">$</span>
+      <input id="amt" inputmode="decimal" placeholder="0,00" aria-label="Montant dépensé">
+    </div>
+    <div class="note-row">
+      <input id="note" placeholder="C'était quoi? (optionnel)" aria-label="Note" maxlength="60">
+      <button id="go" class="go" type="submit" disabled>Enlever</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </form>
+
+  <section class="list">
+    <h3 class="label" id="listTitle">Dépenses du mois</h3>
+    <ul class="rows" id="rows"></ul>
+    <div class="empty" id="empty" hidden>Rien encore. Entre un montant en haut pis il se soustrait tout seul.</div>
+  </section>
+
+  <section class="backup">
+    <p id="backupInfo">Tout est sauvé sur ce téléphone.</p>
+    <div class="btns">
+      <button class="ghost" id="exportBtn" type="button">Faire une copie</button>
+      <button class="ghost" id="importBtn" type="button">Restaurer une copie</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  const LS = "il-me-reste-v1";
+  const $ = id => document.getElementById(id);
+  const money = new Intl.NumberFormat("fr-CA", { style: "currency", currency: "CAD" });
+  const shortDate = new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short" });
+
+  let state = { mBudget: null, yBudget: null, entries: [], v: 0, lastBackup: null };
+  let tab = "m", editing = false;
+
+  // ---------- storage ----------
+  function valid(s) { return s && typeof s === "object" && Array.isArray(s.entries); }
+  try { const s = JSON.parse(localStorage.getItem(LS) || "null"); if (valid(s)) state = Object.assign(state, s); } catch (e) {}
+  try { if (localStorage.getItem(LS + "-tab") === "y") tab = "y"; } catch (e) {}
+  // ask the browser not to clear our data on its own
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+
+  function saveLocal() {
+    try { localStorage.setItem(LS, JSON.stringify(state)); }
+    catch (e) { toast("Impossible de sauvegarder : la mémoire du navigateur est pleine ou bloquée."); }
+  }
+  function prune() {
+    const cutoff = Date.now() - 400 * 864e5;
+    state.entries = state.entries.filter(e => new Date(e.d).getTime() > cutoff);
+  }
+  function commit() { state.v = Date.now(); prune(); saveLocal(); render(); }
+
+  let toastT;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+
+  // ---------- math ----------
+  function inPeriod(e, k) {
+    if (e.k !== k) return false;
+    const d = new Date(e.d), n = new Date();
+    return k === "m" ? d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth()
+                     : d.getFullYear() === n.getFullYear();
+  }
+  function parseAmt(s) {
+    const v = parseFloat(String(s).replace(/\s/g, "").replace("$", "").replace(",", "."));
+    return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
+  }
+  function bigHTML(v) {
+    const neg = v < 0, a = Math.abs(v);
+    let dollars = Math.floor(a), cents = Math.round((a - dollars) * 100);
+    if (cents === 100) { dollars++; cents = 0; }
+    const d = new Intl.NumberFormat("fr-CA").format(dollars);
+    return (neg ? "−" : "") + d + (cents ? `<span class="cents">,${String(cents).padStart(2, "0")}</span>` : "") + " $";
+  }
+  const plural = (n, w) => `${n} ${w}${n > 1 ? "s" : ""}`;
+
+  // ---------- render ----------
+  function render() {
+    const n = new Date(), isM = tab === "m";
+    $("tabM").setAttribute("aria-pressed", isM);
+    $("tabY").setAttribute("aria-pressed", !isM);
+    const budget = isM ? state.mBudget : state.yBudget;
+    const needSetup = budget == null || editing;
+
+    $("setup").hidden = !needSetup;
+    $("main").hidden = needSetup;
+    $("add").hidden = needSetup;
+    $("budgetCancel").hidden = !(editing && budget != null);
+    $("setupTitle").textContent = isM ? "Combien tu te donnes par mois?" : "Combien tu mets de côté pour l'année?";
+    $("setupHint").textContent = isM
+      ? "Ce montant revient au complet le 1er de chaque mois."
+      : "Pour les dépenses une fois par année (plaque, pneus, huile, passe de bus…). Repart à zéro le 1er janvier.";
+    $("budgetIn").placeholder = isM ? "350" : "1330";
+
+    const list = state.entries.filter(e => inPeriod(e, tab)).sort((a, b) => b.d.localeCompare(a.d));
+    const spent = list.reduce((s, e) => s + e.a, 0);
+    const monthName = MONTHS[n.getMonth()];
+
+    if (!needSetup) {
+      const left = Math.round((budget - spent) * 100) / 100;
+      const ratio = budget > 0 ? left / budget : 0;
+      const level = left < 0 ? "bad" : ratio < 0.2 ? "warn" : "ok";
+      $("heroLabel").textContent = isM ? `Il te reste en ${monthName}` : `Il te reste pour ${n.getFullYear()}`;
+      $("big").innerHTML = bigHTML(left);
+      $("big").className = "big " + level;
+      $("bar").className = "bar " + level;
+      $("bar").firstElementChild.style.width = Math.max(0, Math.min(1, ratio)) * 100 + "%";
+      $("spentLine").innerHTML = `<b>${money.format(spent)}</b> dépensés sur ${money.format(budget)}`;
+      if (isM) {
+        const last = new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate();
+        const daysLeft = last - n.getDate() + 1;
+        $("pace").textContent = left > 0
+          ? `${plural(daysLeft, "jour")} avant le reset · environ ${money.format(left / daysLeft)} par jour`
+          : left === 0 ? `Pile à zéro. Reset dans ${plural(daysLeft, "jour")}.`
+          : `Dépassé de ${money.format(-left)}. Reset dans ${plural(daysLeft, "jour")}.`;
+      } else {
+        const monthsLeft = 12 - n.getMonth();
+        $("pace").textContent = left >= 0
+          ? `${monthsLeft} mois avant le 1er janvier · environ ${money.format(left / monthsLeft)} par mois`
+          : `Dépassé de ${money.format(-left)} pour l'année.`;
+      }
+    }
+
+    $("listTitle").textContent = isM ? `Dépenses de ${monthName}` : `Dépenses annuelles ${n.getFullYear()}`;
+    $("note").placeholder = isM ? "C'était quoi? (optionnel)" : "Ex. : plaque, pneus (optionnel)";
+
+    const seen = [];
+    for (const e of state.entries.filter(e => e.k === tab).sort((a, b) => b.d.localeCompare(a.d))) {
+      if (e.n && !seen.includes(e.n)) seen.push(e.n);
+      if (seen.length >= 5) break;
+    }
+    const chips = $("chips"); chips.textContent = "";
+    seen.forEach(t => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.onclick = () => { $("note").value = t; $("amt").focus(); }; chips.appendChild(b); });
+    chips.hidden = !seen.length;
+
+    const rows = $("rows"); rows.textContent = "";
+    list.forEach(e => {
+      const li = document.createElement("li");
+      const what = document.createElement("div"); what.className = "what";
+      const sp = document.createElement("span"); sp.textContent = e.n || "Dépense";
+      const sm = document.createElement("small"); sm.textContent = shortDate.format(new Date(e.d));
+      what.append(sp, sm);
+      const amt = document.createElement("div"); amt.className = "amt"; amt.textContent = "−" + money.format(e.a);
+      const del = document.createElement("button"); del.className = "del"; del.type = "button"; del.setAttribute("aria-label", "Supprimer"); del.textContent = "×";
+      del.onclick = () => {
+        if (!del.classList.contains("armed")) {
+          del.classList.add("armed"); del.textContent = "Supprimer";
+          setTimeout(() => { if (del.isConnected) { del.classList.remove("armed"); del.textContent = "×"; } }, 3000);
+          return;
+        }
+        state.entries = state.entries.filter(x => x.id !== e.id); commit();
+      };
+      li.append(what, amt, del); rows.appendChild(li);
+    });
+    $("empty").hidden = list.length > 0 || needSetup;
+    rows.hidden = needSetup;
+
+    // backup reminder
+    const info = $("backupInfo");
+    const hasData = state.entries.length > 0;
+    if (!state.lastBackup) {
+      info.textContent = hasData ? "Tout est sauvé sur ce téléphone. Fais une copie de temps en temps au cas où." : "Tout est sauvé sur ce téléphone.";
+      info.className = "";
+    } else {
+      const days = Math.floor((Date.now() - new Date(state.lastBackup).getTime()) / 864e5);
+      info.textContent = days === 0 ? "Dernière copie : aujourd'hui." : `Dernière copie : il y a ${plural(days, "jour")}.`;
+      info.className = days > 30 && hasData ? "late" : "";
+    }
+  }
+
+  // ---------- events ----------
+  function setTab(t) { tab = t; editing = false; try { localStorage.setItem(LS + "-tab", t); } catch (e) {} render(); }
+  $("tabM").onclick = () => setTab("m");
+  $("tabY").onclick = () => setTab("y");
+
+  $("amt").addEventListener("input", () => { $("go").disabled = parseAmt($("amt").value) == null; });
+  $("add").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const a = parseAmt($("amt").value); if (a == null) return;
+    state.entries.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), k: tab, a, n: $("note").value.trim().slice(0, 60), d: new Date().toISOString() });
+    $("amt").value = ""; $("note").value = ""; $("go").disabled = true;
+    commit(); $("amt").blur(); $("note").blur();
+  });
+
+  $("editBudget").onclick = () => {
+    editing = true;
+    const b = tab === "m" ? state.mBudget : state.yBudget;
+    $("budgetIn").value = b != null ? String(b).replace(".", ",") : "";
+    render(); $("budgetIn").focus();
+  };
+  $("budgetCancel").onclick = () => { editing = false; render(); };
+  function saveBudget() {
+    const v = parseAmt($("budgetIn").value); if (v == null) { $("budgetIn").focus(); return; }
+    if (tab === "m") state.mBudget = v; else state.yBudget = v;
+    editing = false; $("budgetIn").value = ""; commit();
+  }
+  $("budgetSave").onclick = saveBudget;
+  $("budgetIn").addEventListener("keydown", e => { if (e.key === "Enter") saveBudget(); });
+
+  // ---------- backup ----------
+  $("exportBtn").onclick = async () => {
+    const day = new Date().toISOString().slice(0, 10);
+    const name = `il-me-reste-${day}.json`;
+    const blob = new Blob([JSON.stringify({ app: "il-me-reste", version: 1, savedAt: new Date().toISOString(), data: state }, null, 2)], { type: "application/json" });
+    const file = new File([blob], name, { type: "application/json" });
+    let done = false;
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Copie Il me reste" });
+        done = true;
+      }
+    } catch (e) {
+      if (e && e.name === "AbortError") return; // user closed the share sheet
+    }
+    if (!done) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    state.lastBackup = new Date().toISOString(); saveLocal(); render();
+    toast("Copie faite. Garde-la dans Fichiers → iCloud Drive.");
+  };
+  $("importBtn").onclick = () => $("importFile").click();
+  $("importFile").addEventListener("change", async () => {
+    const f = $("importFile").files[0]; $("importFile").value = "";
+    if (!f) return;
+    try {
+      const parsed = JSON.parse(await f.text());
+      const data = parsed && parsed.data ? parsed.data : parsed;
+      if (!valid(data)) throw new Error("bad");
+      const ok = confirm(`Remplacer ce qu'il y a dans l'app par cette copie (${plural(data.entries.length, "dépense")})?`);
+      if (!ok) return;
+      state = Object.assign({ mBudget: null, yBudget: null, entries: [], v: 0, lastBackup: null }, data);
+      state.lastBackup = state.lastBackup || new Date().toISOString();
+      editing = false; commit(); toast("Copie restaurée.");
+    } catch (e) {
+      toast("Ce fichier n'est pas une copie de Il me reste.");
+    }
+  });
+
+  render();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+
+  // offline support once hosted
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
